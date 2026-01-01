@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xbox Controller Overlay - 2000x2000 (250px Sticks) - Fixed D-Pad</title>
+    <style>
+        /* --- Base Styles --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; 
+            min-height: 100vh;
+            background: transparent; 
+            font-family: Arial, sans-serif;
+            overflow: auto;
+        }
+
+        .container {
+            text-align: center;
+            position: relative;
+            /* SCALE FOR CHROME: Adjust or remove for final OBS use */
+            transform: scale(1); 
+            transform-origin: top center;
+        }
+
+        .controller-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 2000px; 
+            height: 2000px; 
+        }
+
+        /* --- Controller Base and Buttons --- */
+        .controller.xbox {
+            background: url(base.png);
+            width: 2000px;
+            height: 2000px;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+            position: absolute;
+        }
+
+        .xbox .triggers, .xbox .trigger, .xbox .bumpers, .xbox .bumper, 
+        .xbox .arrows, .xbox .back, .xbox .start, .xbox .abxy, .xbox .button, 
+        .xbox .dpad, .xbox .face {
+            width: 2000px;
+            height: 2000px;
+            position: absolute;
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+        }
+        
+        .xbox .trigger.left { background-image: url(LT.png); }
+        .xbox .trigger.right { background-image: url(RT.png); }
+        .xbox .bumper.left { background-image: url(LB.png); }
+        .xbox .bumper.right { background-image: url(RB.png); }
+        .xbox .back { background-image: url(Select.png); }
+        .xbox .start { background-image: url(Start.png); }
+        .xbox .a { background-image: url(A.png); }
+        .xbox .b { background-image: url(B.png); }
+        .xbox .x { background-image: url(X.png); }
+        .xbox .y { background-image: url(Y.png); }
+        .xbox .face.up { background-image: url(Up.png); }
+        .xbox .face.down { background-image: url(Down.png); }
+        .xbox .face.left { background-image: url(Left.png); }
+        .xbox .face.right { background-image: url(Right.png); }
+
+        .xbox .trigger, .xbox .bumper, .xbox .back, .xbox .start, .xbox .button, .xbox .face {
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out;
+        }
+        .xbox .trigger.pressed, .xbox .bumper.pressed, .xbox .back.pressed, .xbox .start.pressed, .xbox .button.pressed, .xbox .face.pressed {
+            opacity: 1;
+        }
+
+        /* --- STICK WRAPPER --- */
+        .xbox .sticks {
+            position: absolute;
+            width: 2000px;
+            height: 2000px;
+            top: 0px;
+            left: 0px;
+        }
+
+        /* --- INDIVIDUAL STICK CONTAINERS --- */
+        .stick-container {
+            position: absolute;
+            width: 250px; 
+            height: 250px; 
+            perspective: 600px; 
+            transform-style: preserve-3d;
+        }
+        
+        .stick-container.left {
+            top: 940px; 
+            left: 659px; 
+        }
+
+        .stick-container.right {
+            top: 940px; 
+            left: 1090px; 
+        }
+
+        .xbox .stick {
+            position: absolute;
+            width: 250px; 
+            height: 250px; 
+            background-size: contain; 
+            background-repeat: no-repeat;
+            background-position: center;
+            transform-origin: center center; 
+            transition: transform 0.05s linear; 
+            will-change: transform;
+            top: 0px; 
+            left: 0px; 
+        }
+
+        .xbox .stick.shadow-0 { z-index: 0; } 
+        .xbox .stick.shadow-1 { z-index: 1; } 
+        .xbox .stick.shadow-2 { z-index: 2; }
+        .xbox .stick.shadow-3 { z-index: 3; }
+        .xbox .stick.main { z-index: 4; }
+
+        .xbox .stick.left { background-image: url(LSidle.png); }
+        .xbox .stick.right { background-image: url(RSidle.png); }
+
+        .xbox .stick.main.pressed.left { background-image: url(LS.png); }
+        .xbox .stick.main.pressed.right { background-image: url(RS.png); }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="controller-wrapper">
+            <div class="controller xbox">
+                <div class="triggers"><div class="trigger left"></div><div class="trigger right"></div></div>
+                <div class="bumpers"><div class="bumper left"></div><div class="bumper right"></div></div>
+                <div class="arrows"><div class="back"></div><div class="start"></div></div>
+                <div class="abxy"><div class="button a"></div><div class="button b"></div><div class="button x"></div><div class="button y"></div></div>
+                
+                <div class="sticks">
+                    <div class="stick-container left">
+                        <div class="stick shadow-0 left"></div> 
+                        <div class="stick shadow-1 left"></div>
+                        <div class="stick shadow-2 left"></div>
+                        <div class="stick shadow-3 left"></div>
+                        <div class="stick main left"></div>
+                    </div>
+                    
+                    <div class="stick-container right">
+                        <div class="stick shadow-0 right"></div>
+                        <div class="stick shadow-1 right"></div>
+                        <div class="stick shadow-2 right"></div>
+                        <div class="stick shadow-3 right"></div>
+                        <div class="stick main right"></div>
+                    </div>
+                </div>
+                
+                <div class="dpad"><div class="face up"></div><div class="face down"></div><div class="face left"></div><div class="face right"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let gamepadIndex = null;
+        
+        const buttonMap = {
+            0: '.a', 1: '.b', 2: '.x', 3: '.y', 4: '.bumper.left', 5: '.bumper.right', 
+            6: '.trigger.left', 7: '.trigger.right', 8: '.back', 9: '.start', 
+            10: '.stick.main.left', 11: '.stick.main.right'
+        };
+
+        const controllerElements = {};
+        Object.values(buttonMap).forEach(selector => {
+            if (!selector.includes('.stick')) {
+                controllerElements[selector] = document.querySelector(selector);
+            }
+        });
+        
+        controllerElements['.face.up'] = document.querySelector('.face.up');
+        controllerElements['.face.down'] = document.querySelector('.face.down');
+        controllerElements['.face.left'] = document.querySelector('.face.left');
+        controllerElements['.face.right'] = document.querySelector('.face.right');
+
+        const leftStickLayers = [
+            document.querySelector('.stick-container.left .stick.main.left'),
+            document.querySelector('.stick-container.left .stick.shadow-3.left'),
+            document.querySelector('.stick-container.left .stick.shadow-2.left'),
+            document.querySelector('.stick-container.left .stick.shadow-1.left'),
+            document.querySelector('.stick-container.left .stick.shadow-0.left'),
+        ];
+        const rightStickLayers = [
+            document.querySelector('.stick-container.right .stick.main.right'),
+            document.querySelector('.stick-container.right .stick.shadow-3.right'),
+            document.querySelector('.stick-container.right .stick.shadow-2.right'),
+            document.querySelector('.stick-container.right .stick.shadow-1.right'),
+            document.querySelector('.stick-container.right .stick.shadow-0.right'),
+        ];
+        
+        function connectHandler(e) {
+            gamepadIndex = e.gamepad.index;
+            setInitialStickTransforms();
+            requestAnimationFrame(updateStatus);
+        }
+
+        function disconnectHandler(e) {
+            if (gamepadIndex === e.gamepad.index) {
+                gamepadIndex = null;
+                document.querySelectorAll('.stick').forEach(element => {
+                    element.classList.remove('pressed');
+                    const z = element.dataset.zDistance || 0;
+                    element.style.transform = `translate(0px, 0px) translateZ(${-z}px) rotateX(0deg) rotateY(0deg)`;
+                });
+                document.querySelectorAll('.xbox .trigger, .xbox .bumper, .xbox .back, .xbox .start, .xbox .button, .xbox .face').forEach(el => el.classList.remove('pressed'));
+            }
+        }
+
+        function applyStickPhysics(element, x, y, TRAVEL_FACTOR, TILT_FACTOR, layerIndex) {
+            if (Math.abs(x) < 0.1) x = 0;
+            if (Math.abs(y) < 0.1) y = 0;
+
+            const BASE_TRAVEL_DISTANCE = 40; 
+            const BASE_TILT_ANGLE = 28;      
+            const Z_SEPARATION_UNIT = 4;
+            
+            const Z_DISTANCE = Z_SEPARATION_UNIT * layerIndex;
+            const moveX = x * (BASE_TRAVEL_DISTANCE * TRAVEL_FACTOR);
+            const moveY = y * (BASE_TRAVEL_DISTANCE * TRAVEL_FACTOR);
+            const rotateX = y * (BASE_TILT_ANGLE * TILT_FACTOR); 
+            const rotateY = x * (BASE_TILT_ANGLE * TILT_FACTOR);
+
+            element.style.transform = `translate(${moveX}px, ${moveY}px) translateZ(${-Z_DISTANCE}px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+            element.dataset.zDistance = Z_DISTANCE;
+        }
+
+        function updateStatus() {
+            if (gamepadIndex === null) return;
+            const gamepad = navigator.getGamepads()[gamepadIndex];
+            if (!gamepad) return;
+
+            // 1. Digital Button Update
+            gamepad.buttons.forEach((button, index) => {
+                const selector = buttonMap[index];
+                if (selector && selector.includes('.stick.main')) {
+                    const generic = selector.replace('.main', '');
+                    document.querySelectorAll('.stick-container' + generic.replace('.stick', ' .stick'))
+                            .forEach(el => button.pressed ? el.classList.add('pressed') : el.classList.remove('pressed'));
+                } else if (controllerElements[selector]) {
+                    const isPressed = button.pressed || (index >= 6 && index <= 7 && button.value > 0.1); 
+                    isPressed ? controllerElements[selector].classList.add('pressed') : controllerElements[selector].classList.remove('pressed');
+                }
+            });
+
+            // 2. Robust D-pad Check (Axes + Button Fallback)
+            const AXIS_DPAD_X = gamepad.axes[6] !== undefined ? gamepad.axes[6] : gamepad.axes[4]; 
+            const AXIS_DPAD_Y = gamepad.axes[7] !== undefined ? gamepad.axes[7] : gamepad.axes[5]; 
+            
+            let dpadPressed = false;
+
+            // Check Axes first
+            if (AXIS_DPAD_X < -0.5) { controllerElements['.face.left'].classList.add('pressed'); dpadPressed = true; } 
+            else { controllerElements['.face.left'].classList.remove('pressed'); }
+            
+            if (AXIS_DPAD_X > 0.5) { controllerElements['.face.right'].classList.add('pressed'); dpadPressed = true; } 
+            else { controllerElements['.face.right'].classList.remove('pressed'); }
+
+            if (AXIS_DPAD_Y < -0.5) { controllerElements['.face.up'].classList.add('pressed'); dpadPressed = true; } 
+            else { controllerElements['.face.up'].classList.remove('pressed'); }
+
+            if (AXIS_DPAD_Y > 0.5) { controllerElements['.face.down'].classList.add('pressed'); dpadPressed = true; } 
+            else { controllerElements['.face.down'].classList.remove('pressed'); }
+
+            // Fallback: Check Buttons 12-15 if axes are neutral
+            if (!dpadPressed) {
+                if (gamepad.buttons[12]?.pressed) controllerElements['.face.up'].classList.add('pressed');
+                if (gamepad.buttons[13]?.pressed) controllerElements['.face.down'].classList.add('pressed');
+                if (gamepad.buttons[14]?.pressed) controllerElements['.face.left'].classList.add('pressed');
+                if (gamepad.buttons[15]?.pressed) controllerElements['.face.right'].classList.add('pressed');
+            }
+
+            // 3. Stick Layers Update
+            const STACK_FACTORS = [1.0, 0.96, 0.92, 0.88, 0.84]; 
+            leftStickLayers.forEach((el, i) => el && applyStickPhysics(el, gamepad.axes[0], gamepad.axes[1], STACK_FACTORS[i], STACK_FACTORS[i], i));
+            rightStickLayers.forEach((el, i) => el && applyStickPhysics(el, gamepad.axes[2], gamepad.axes[3], STACK_FACTORS[i], STACK_FACTORS[i], i));
+
+            requestAnimationFrame(updateStatus);
+        }
+
+        function setInitialStickTransforms() {
+            const Z_UNIT = 4; 
+            [leftStickLayers, rightStickLayers].forEach(layers => {
+                layers.forEach((el, i) => {
+                    const z = Z_UNIT * i;
+                    el.style.transform = `translate(0px, 0px) translateZ(${-z}px) rotateX(0deg) rotateY(0deg)`;
+                    el.dataset.zDistance = z;
+                });
+            });
+        }
+
+        window.addEventListener('gamepadconnected', connectHandler);
+        window.addEventListener('gamepaddisconnected', disconnectHandler);
+        setInitialStickTransforms();
+    </script>
+</body>
+</html>
