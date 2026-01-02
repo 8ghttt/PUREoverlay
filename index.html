@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUREoverlay</title>
+    <title>PUREoverlayV3</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -25,10 +25,12 @@
         }
 
         .controller.xbox {
-            background: url(base.png);
+            background-image: url(faceplate.gif), url(base.png);
             width: 2000px; height: 2000px;
-            background-repeat: no-repeat; background-size: contain;
-            background-position: center; position: absolute;
+            background-repeat: no-repeat; 
+            background-size: contain;
+            background-position: center; 
+            position: absolute;
         }
 
         .xbox .trigger, .xbox .bumper, .xbox .back, .xbox .start, .xbox .button, .xbox .face {
