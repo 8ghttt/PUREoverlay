@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Xbox Controller Overlay - Fixed D-Pad & Slow Fade</title>
+    <title>PUREoverlay</title>
     <style>
-        /* --- Base Styles --- */
         * { box-sizing: border-box; }
 
         body {
@@ -32,13 +31,11 @@
             background-position: center; position: absolute;
         }
 
-        /* --- 1. BUTTON FADE LOGIC --- */
         .xbox .trigger, .xbox .bumper, .xbox .back, .xbox .start, .xbox .button, .xbox .face {
             width: 2000px; height: 2000px;
             position: absolute; background-repeat: no-repeat;
             background-size: contain; background-position: center;
             opacity: 0;
-            /* SPEED CONTROL: Change 0.6s to make buttons fade slower or faster */
             transition: opacity 0.35s ease-in-out; 
         }
         
@@ -57,14 +54,12 @@
         .xbox .face.left { background-image: url(Left.png); }
         .xbox .face.right { background-image: url(Right.png); }
 
-        /* Instant On for Buttons */
         .xbox .trigger.pressed, .xbox .bumper.pressed, .xbox .back.pressed, 
         .xbox .start.pressed, .xbox .button.pressed, .xbox .face.pressed {
             opacity: 1;
             transition: none !important; 
         }
 
-        /* --- 2. STICK STACK FADE LOGIC --- */
         .xbox .sticks { position: absolute; width: 2000px; height: 2000px; top: 0; left: 0; }
 
         .stick-container {
@@ -85,13 +80,11 @@
         .xbox .stick.left { background-image: url(LSidle.png); }
         .xbox .stick.right { background-image: url(RSidle.png); }
 
-        /* Stick Overlay Layer for Fading */
         .xbox .stick::after {
             content: "";
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background-size: contain; background-repeat: no-repeat; background-position: center;
             opacity: 0;
-            /* SPEED CONTROL: Change 0.6s to make sticks fade slower or faster */
             transition: opacity 0.35s ease-in-out; 
         }
 
@@ -177,7 +170,6 @@
             const gamepad = navigator.getGamepads()[gamepadIndex];
             if (!gamepad) return;
 
-            // 1. Regular Buttons Update
             gamepad.buttons.forEach((button, index) => {
                 const selector = buttonMap[index];
                 if (selector && selector.includes('.stick.main')) {
@@ -190,7 +182,6 @@
                 }
             });
 
-            // 2. FIXED D-PAD LOGIC (Axes + Digital Buttons)
             const AXIS_DPAD_X = gamepad.axes[6] !== undefined ? gamepad.axes[6] : gamepad.axes[4]; 
             const AXIS_DPAD_Y = gamepad.axes[7] !== undefined ? gamepad.axes[7] : gamepad.axes[5]; 
             
@@ -204,7 +195,6 @@
             left ? controllerElements['.face.left'].classList.add('pressed') : controllerElements['.face.left'].classList.remove('pressed');
             right ? controllerElements['.face.right'].classList.add('pressed') : controllerElements['.face.right'].classList.remove('pressed');
 
-            // 3. Stick Physics Update
             const STACK_FACTORS = [1.0, 0.96, 0.92, 0.88, 0.84]; 
             leftStickLayers.forEach((el, i) => applyStickPhysics(el, gamepad.axes[0], gamepad.axes[1], STACK_FACTORS[i], STACK_FACTORS[i], i));
             rightStickLayers.forEach((el, i) => applyStickPhysics(el, gamepad.axes[2], gamepad.axes[3], STACK_FACTORS[i], STACK_FACTORS[i], i));
