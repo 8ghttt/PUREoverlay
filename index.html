@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PUREoverlayV3</title>
+    <title>PUREoverlayV3_Final</title>
     <style>
         * { box-sizing: border-box; }
 
@@ -17,20 +17,35 @@
         .container {
             text-align: center; position: relative;
             transform: scale(1); transform-origin: top center;
+            /* Force GPU rendering to prevent flickering across the whole container */
+            transform: translateZ(0); 
         }
 
         .controller-wrapper {
             position: relative; display: inline-block;
-            width: 2000px; height: 2000px; 
+            width: 2000px; height: 2000px;
+            contain: strict; 
+        }
+
+        .base-layer {
+            position: absolute;
+            top: 0; left: 0;
+            width: 2000px; height: 2000px;
+            background-image: url('base.gif');
+            background-repeat: no-repeat;
+            background-size: contain;
+            background-position: center;
+            z-index: 0;
+            pointer-events: none;
+            transform: translateZ(0);
+            backface-visibility: hidden;
+            will-change: transform;
         }
 
         .controller.xbox {
-            background-image: url(faceplate.gif), url(base.png);
             width: 2000px; height: 2000px;
-            background-repeat: no-repeat; 
-            background-size: contain;
-            background-position: center; 
             position: absolute;
+            z-index: 1;
         }
 
         .xbox .trigger, .xbox .bumper, .xbox .back, .xbox .start, .xbox .button, .xbox .face {
@@ -76,7 +91,7 @@
             position: absolute; width: 250px; height: 250px; 
             background-size: contain; background-repeat: no-repeat;
             background-position: center; transform-origin: center center; 
-            transition: transform 0.05s linear; will-change: transform;
+            will-change: transform; transition: transform 0.05s linear;
         }
 
         .xbox .stick.left { background-image: url(LSidle.png); }
@@ -108,6 +123,8 @@
 <body>
     <div class="container">
         <div class="controller-wrapper">
+            <div class="base-layer"></div>
+
             <div class="controller xbox">
                 <div class="triggers"><div class="trigger left"></div><div class="trigger right"></div></div>
                 <div class="bumpers"><div class="bumper left"></div><div class="bumper right"></div></div>
@@ -159,12 +176,13 @@
         function applyStickPhysics(element, x, y, TRAVEL_FACTOR, TILT_FACTOR, layerIndex) {
             if (Math.abs(x) < 0.1) x = 0;
             if (Math.abs(y) < 0.1) y = 0;
-            const moveX = x * (40 * TRAVEL_FACTOR);
-            const moveY = y * (40 * TRAVEL_FACTOR);
-            const rotateX = y * (28 * TILT_FACTOR); 
-            const rotateY = x * (28 * TILT_FACTOR);
+            const moveX = x * (42 * TRAVEL_FACTOR);
+            const moveY = y * (42 * TRAVEL_FACTOR);
+            const rotateX = y * (30 * TILT_FACTOR); 
+            const rotateY = x * (30 * TILT_FACTOR);
             const z = 4 * layerIndex;
-            element.style.transform = `translate(${moveX}px, ${moveY}px) translateZ(${-z}px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
+            // Using translate3d for better GPU performance
+            element.style.transform = `translate3d(${moveX}px, ${moveY}px, ${-z}px) rotateX(${-rotateX}deg) rotateY(${rotateY}deg)`;
         }
 
         function updateStatus() {
@@ -179,13 +197,15 @@
                     document.querySelectorAll('.stick-container' + side + ' .stick')
                             .forEach(el => button.pressed ? el.classList.add('pressed') : el.classList.remove('pressed'));
                 } else if (controllerElements[selector]) {
+                    // Preserved original sensitivity logic
                     const isPressed = button.pressed || (index >= 6 && index <= 7 && button.value > 0.1); 
                     isPressed ? controllerElements[selector].classList.add('pressed') : controllerElements[selector].classList.remove('pressed');
                 }
             });
 
-            const AXIS_DPAD_X = gamepad.axes[6] !== undefined ? gamepad.axes[6] : gamepad.axes[4]; 
-            const AXIS_DPAD_Y = gamepad.axes[7] !== undefined ? gamepad.axes[7] : gamepad.axes[5]; 
+            // Preserved original D-Pad Axis support
+            const AXIS_DPAD_X = gamepad.axes[6] !== undefined ? gamepad.axes[6] : (gamepad.axes[4] || 0); 
+            const AXIS_DPAD_Y = gamepad.axes[7] !== undefined ? gamepad.axes[7] : (gamepad.axes[5] || 0); 
             
             const up = (gamepad.buttons[12] && gamepad.buttons[12].pressed) || AXIS_DPAD_Y < -0.5;
             const down = (gamepad.buttons[13] && gamepad.buttons[13].pressed) || AXIS_DPAD_Y > 0.5;
